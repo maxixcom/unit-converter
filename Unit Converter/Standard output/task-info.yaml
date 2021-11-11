@@ -47,6 +47,12 @@ files:
         println("Hello, World!")
     }
   learner_created: false
+- name: src/converter/console/ConsoleRunner.kt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/70/stages/385/implement#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Thu, 11 Nov 2021 06:42:36 UTC
+record: 1

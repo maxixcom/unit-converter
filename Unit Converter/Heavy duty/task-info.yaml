@@ -222,6 +222,111 @@ files:
         }
     }
   learner_created: false
+- name: src/converter/console/ConsoleRunner.kt
+  visible: true
+  text: |
+    package converter.console
+
+    import converter.converters.Converter
+    import converter.converters.DistanceConverter
+    import converter.converters.DistanceUnit
+    import converter.toPlural
+
+    class ConsoleRunner : Runnable {
+        private val table = mapOf<Regex, Converter>(
+            "^(m|meters?)$".toRegex() to DistanceConverter(DistanceUnit.Meter),
+            "^(km|kilometers?)$".toRegex() to DistanceConverter(DistanceUnit.Kilometer),
+            "^(cm|centimeters?)$".toRegex() to DistanceConverter(DistanceUnit.Centimeter),
+            "^(mm|millimeters?)$".toRegex() to DistanceConverter(DistanceUnit.Millimeter),
+            "^(mi|miles?)$".toRegex() to DistanceConverter(DistanceUnit.Mile),
+            "^(yd|yards?)$".toRegex() to DistanceConverter(DistanceUnit.Yard),
+            "^(ft|foot|feet)$".toRegex() to DistanceConverter(DistanceUnit.Foot),
+            "^(in|inch|inches)$".toRegex() to DistanceConverter(DistanceUnit.Inch),
+        )
+
+        override fun run() {
+            println("Enter a number and a measure of length:")
+            val query = readLine()!!
+            val queryRegex = "^(?<num>[+-]?([0-9]*[.])?[0-9]+)\\s+(?<unit>\\w+)$".toRegex(RegexOption.IGNORE_CASE)
+            val output = queryRegex.matchEntire(query)?.let {
+                val unit = it.groups["unit"]!!.value.lowercase()
+                val value = it.groups["num"]!!.value.toDouble()
+
+                table.asSequence().mapNotNull { (regex, converter) ->
+                    regex.find(unit)?.let {
+                        val convertedValue = converter.convert(value)
+                        "$value ${converter.fromUnitName().toPlural(value)}" +
+                            " is " +
+                            "$convertedValue ${converter.toUnitName().toPlural(convertedValue)}"
+                    }
+                }.firstOrNull() ?: "Wrong input. Unknown unit $unit"
+            } ?: "Wrong input."
+
+            println(output)
+        }
+    }
+  learner_created: true
+- name: src/converter/Extensions.kt
+  visible: true
+  text: |
+    package converter
+
+    fun String.toPlural(num: Number): String {
+        val table = mapOf(
+            "foot" to "feet",
+            "inch" to "inches",
+        )
+        return table[this]?.let {
+            if (num != 1.0) {
+                it
+            } else {
+                this
+            }
+        } ?: if (num != 1.0) "${this}s" else this
+    }
+  learner_created: true
+- name: src/converter/converters/Converter.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    interface Converter {
+        fun fromUnitName(): String
+        fun toUnitName(): String
+        fun convert(value: Double): Double
+    }
+  learner_created: true
+- name: src/converter/converters/DistanceUnit.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    enum class DistanceUnit(val k: Double, val longName: String) {
+        Meter(1.0, "meter"),
+        Kilometer(1000.0, "kilometer"),
+        Centimeter(0.01, "centimeter"),
+        Millimeter(0.001, "millimeter"),
+        Mile(1609.35, "mile"),
+        Yard(0.9144, "yard"),
+        Foot(0.3048, "foot"),
+        Inch(0.0254, "inch"),
+    }
+  learner_created: true
+- name: src/converter/converters/DistanceConverter.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    class DistanceConverter(
+        private val fromUnit: DistanceUnit
+    ) : Converter {
+        override fun fromUnitName(): String = fromUnit.longName
+
+        override fun toUnitName(): String = "meter"
+
+        override fun convert(value: Double): Double = value * fromUnit.k
+    }
+  learner_created: true
 - name: test/Task4Test.kt
   visible: false
   text: |2

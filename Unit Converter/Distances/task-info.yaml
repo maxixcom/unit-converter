@@ -188,6 +188,102 @@ files:
         }
     }
   learner_created: false
+- name: src/converter/console/ConsoleRunner.kt
+  visible: true
+  text: |
+    package converter.console
+
+    import converter.converters.Converter
+    import converter.converters.DistanceConverter
+
+    class ConsoleRunner : Runnable {
+        val table = mapOf<Regex, Converter>(
+            "^(?<num>\\d+)\\s+(m|meters?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Meter),
+            "^(?<num>\\d+)\\s+(km|kilometers?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Kilometer),
+            "^(?<num>\\d+)\\s+(cm|centimeters?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Centimeter),
+            "^(?<num>\\d+)\\s+(mm|millimeter?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Millimeter),
+            "^(?<num>\\d+)\\s+(mi|miles?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Mile),
+            "^(?<num>\\d+)\\s+(yd|yards?)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Yard),
+            "^(?<num>\\d+)\\s+(ft|foot|feet)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Foot),
+            "^(?<num>\\d+)\\s+(in|inch|inches)$".toRegex(RegexOption.IGNORE_CASE) to
+                DistanceConverter(DistanceConverter.Unit.Inch),
+        )
+
+        override fun run() {
+            println("Enter a number and a measure of length:")
+            val query = readLine()!!
+            val output = table.asSequence().mapNotNull { (regex, converter) ->
+                regex.find(query)?.let {
+                    val value = it.groups["num"]!!.value.toDouble()
+                    val convertedValue = converter.convert(value)
+                    "$value ${converter.fromUnitName().toPlural(value)}" +
+                        " is " +
+                        "$convertedValue ${converter.toUnitName().toPlural(convertedValue)}"
+                }
+            }.firstOrNull() ?: "Wrong value"
+
+            println(output)
+        }
+    }
+
+    private fun String.toPlural(num: Number): String {
+        val table = mapOf(
+            "foot" to "feet",
+            "inch" to "inches",
+        )
+        return table[this]?.let {
+            if (num.toInt() > 1) {
+                it
+            } else {
+                this
+            }
+        } ?: "${this}s"
+    }
+  learner_created: true
+- name: src/converter/converters/Converter.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    interface Converter {
+        fun fromUnitName(): String
+        fun toUnitName(): String
+        fun convert(value: Double): Double
+    }
+  learner_created: true
+- name: src/converter/converters/DistanceConverter.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    class DistanceConverter(
+        private val fromUnit: Unit
+    ) : Converter {
+        enum class Unit(val k: Double, val longName: String) {
+            Meter(1.0, "meter"),
+            Kilometer(1000.0, "kilometer"),
+            Centimeter(0.01, "centimeter"),
+            Millimeter(0.001, "millimeter"),
+            Mile(1609.35, "mile"),
+            Yard(0.9144, "yard"),
+            Foot(0.3048, "foot"),
+            Inch(0.0254, "inch"),
+        }
+
+        override fun fromUnitName(): String = fromUnit.longName
+
+        override fun toUnitName(): String = "meter"
+
+        override fun convert(value: Double): Double = value * fromUnit.k
+    }
+  learner_created: true
 - name: test/Task3Test.kt
   visible: false
   text: |2+
@@ -278,6 +374,15 @@ files:
     }
 
   learner_created: false
+- name: src/converter/Extensions.kt
+  visible: true
+  learner_created: true
+- name: src/converter/converters/DistanceUnit.kt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/70/stages/387/implement#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Thu, 11 Nov 2021 08:34:20 UTC
+record: 3

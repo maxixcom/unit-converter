@@ -1,5 +1,8 @@
 package converter
 
+import converter.console.ConsoleRunner
+
 fun main() {
-    println("Hello, World!")
+    ConsoleRunner()
+        .run()
 }
