@@ -1,7 +1,5 @@
 package converter.converters
 
 interface Converter {
-    fun fromUnitName(): String
-    fun toUnitName(): String
-    fun convert(value: Double): Double
+    fun convert(value: Double, from: ConverterUnit, to: ConverterUnit): Double
 }

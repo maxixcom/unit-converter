@@ -1,40 +1,55 @@
 package converter.console
 
 import converter.converters.Converter
-import converter.converters.DistanceConverter
-import converter.converters.DistanceUnit
+import converter.converters.ConverterImpl
+import converter.converters.toConverterUnit
+import converter.exceptions.ImpossibleToConvertException
 import converter.toPlural
 
 class ConsoleRunner : Runnable {
-    private val table = mapOf<Regex, Converter>(
-        "^(m|meters?)$".toRegex() to DistanceConverter(DistanceUnit.Meter),
-        "^(km|kilometers?)$".toRegex() to DistanceConverter(DistanceUnit.Kilometer),
-        "^(cm|centimeters?)$".toRegex() to DistanceConverter(DistanceUnit.Centimeter),
-        "^(mm|millimeters?)$".toRegex() to DistanceConverter(DistanceUnit.Millimeter),
-        "^(mi|miles?)$".toRegex() to DistanceConverter(DistanceUnit.Mile),
-        "^(yd|yards?)$".toRegex() to DistanceConverter(DistanceUnit.Yard),
-        "^(ft|foot|feet)$".toRegex() to DistanceConverter(DistanceUnit.Foot),
-        "^(in|inch|inches)$".toRegex() to DistanceConverter(DistanceUnit.Inch),
-    )
+    private val converter: Converter = ConverterImpl()
+    private val queryRegex = "^(?<value>[+-]?([0-9]*[.])?[0-9]+)\\s+(?<from>\\w+)\\s+\\w+\\s+(?<to>\\w+)$"
+        .toRegex(RegexOption.IGNORE_CASE)
 
     override fun run() {
-        println("Enter a number and a measure of length:")
-        val query = readLine()!!
-        val queryRegex = "^(?<num>[+-]?([0-9]*[.])?[0-9]+)\\s+(?<unit>\\w+)$".toRegex(RegexOption.IGNORE_CASE)
-        val output = queryRegex.matchEntire(query)?.let {
-            val unit = it.groups["unit"]!!.value.lowercase()
-            val value = it.groups["num"]!!.value.toDouble()
 
-            table.asSequence().mapNotNull { (regex, converter) ->
-                regex.find(unit)?.let {
-                    val convertedValue = converter.convert(value)
-                    "$value ${converter.fromUnitName().toPlural(value)}" +
-                        " is " +
-                        "$convertedValue ${converter.toUnitName().toPlural(convertedValue)}"
+        while (true) {
+            println("Enter what you want to convert (or exit):")
+            val query = readLine()!!
+            if (query.matches("exit".toRegex())) {
+                break
+            }
+            try {
+                val result = queryRegex.matchEntire(query) ?: throw Exception("Wrong input.")
+
+                val value = result.groups["value"]!!.value.toDouble()
+                val from = result.groups["from"]!!.value
+                val to = result.groups["to"]!!.value
+
+                val fromUnit = from.lowercase().toConverterUnit()
+                val toUnit = to.lowercase().toConverterUnit()
+
+                val convertedValue = try {
+                    if (fromUnit == null || toUnit == null) {
+                        throw ImpossibleToConvertException("Unknown unit")
+                    }
+                    converter.convert(value, fromUnit, toUnit)
+                } catch (e: ImpossibleToConvertException) {
+                    println(
+                        "Conversion from ${fromUnit?.let { from } ?: "???"}" +
+                            " to " +
+                            "${toUnit?.let { to } ?: "???"} is impossible"
+                    )
+                    continue
                 }
-            }.firstOrNull() ?: "Wrong input. Unknown unit $unit"
-        } ?: "Wrong input."
-
-        println(output)
+                println(
+                    "$value ${fromUnit.name.toPlural(value)}" +
+                        " is " +
+                        "$convertedValue ${toUnit.name.toPlural(convertedValue)}"
+                )
+            } catch (e: Exception) {
+                println(e.message)
+            }
+        }
     }
 }

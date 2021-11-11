@@ -296,37 +296,6 @@ files:
         fun convert(value: Double): Double
     }
   learner_created: true
-- name: src/converter/converters/DistanceUnit.kt
-  visible: true
-  text: |
-    package converter.converters
-
-    enum class DistanceUnit(val k: Double, val longName: String) {
-        Meter(1.0, "meter"),
-        Kilometer(1000.0, "kilometer"),
-        Centimeter(0.01, "centimeter"),
-        Millimeter(0.001, "millimeter"),
-        Mile(1609.35, "mile"),
-        Yard(0.9144, "yard"),
-        Foot(0.3048, "foot"),
-        Inch(0.0254, "inch"),
-    }
-  learner_created: true
-- name: src/converter/converters/DistanceConverter.kt
-  visible: true
-  text: |
-    package converter.converters
-
-    class DistanceConverter(
-        private val fromUnit: DistanceUnit
-    ) : Converter {
-        override fun fromUnitName(): String = fromUnit.longName
-
-        override fun toUnitName(): String = "meter"
-
-        override fun convert(value: Double): Double = value * fromUnit.k
-    }
-  learner_created: true
 - name: test/Task4Test.kt
   visible: false
   text: |2
@@ -417,6 +386,30 @@ files:
         }
     }
   learner_created: false
+- name: src/converter/converters/ConverterUnit.kt
+  visible: true
+  learner_created: true
+- name: src/converter/converters/ConverterImpl.kt
+  visible: true
+  learner_created: true
+- name: src/converter/exceptions/ImpossibleToConvertException.kt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/70/stages/388/implement#comment
-status: Unchecked
+status: Failed
+feedback:
+  message: |-
+    Wrong answer in test #17
+
+    Please find below the output of your program during this failed test.
+    Note that the &#39;&gt;&#39; character indicates the beginning of the input line.
+
+    ---
+
+    Enter what you want to convert (or exit):
+    &gt; 100.0 X to Pound
+    Conversion from ??? to Pound is impossible
+    Enter what you want to convert (or exit):
+    &gt; exit
+  time: Thu, 11 Nov 2021 12:08:14 UTC
 record: -1
