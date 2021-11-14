@@ -251,6 +251,203 @@ files:
         }
     }
   learner_created: false
+- name: src/converter/console/ConsoleRunner.kt
+  visible: true
+  text: |
+    package converter.console
+
+    import converter.converters.Converter
+    import converter.converters.ConverterImpl
+    import converter.converters.toConverterUnit
+    import converter.exceptions.ImpossibleToConvertException
+    import converter.toPlural
+
+    class ConsoleRunner : Runnable {
+        private val converter: Converter = ConverterImpl()
+        private val queryRegex = "^(?<value>[+-]?([0-9]*[.])?[0-9]+)\\s+(?<from>\\w+)\\s+\\w+\\s+(?<to>\\w+)$"
+            .toRegex(RegexOption.IGNORE_CASE)
+
+        override fun run() {
+
+            while (true) {
+                println("Enter what you want to convert (or exit):")
+                val query = readLine()!!
+                if (query.matches("exit".toRegex())) {
+                    break
+                }
+                try {
+                    val result = queryRegex.matchEntire(query) ?: throw Exception("Wrong input.")
+
+                    val value = result.groups["value"]!!.value.toDouble()
+                    val from = result.groups["from"]!!.value.lowercase()
+                    val to = result.groups["to"]!!.value.lowercase()
+
+                    val fromUnit = from.lowercase().toConverterUnit()
+                    val toUnit = to.lowercase().toConverterUnit()
+
+                    val convertedValue = try {
+                        if (fromUnit == null || toUnit == null) {
+                            throw ImpossibleToConvertException("Unknown unit")
+                        }
+                        converter.convert(value, fromUnit, toUnit)
+                    } catch (e: ImpossibleToConvertException) {
+                        println(
+                            "Conversion from ${fromUnit?.let { from.toPlural(2) } ?: "???"}" +
+                                " to " +
+                                "${toUnit?.let { to.toPlural(2) } ?: "???"} is impossible"
+                        )
+                        continue
+                    }
+                    println(
+                        "$value ${fromUnit.name.toPlural(value)}" +
+                            " is " +
+                            "$convertedValue ${toUnit.name.toPlural(convertedValue)}"
+                    )
+                } catch (e: Exception) {
+                    println(e.message)
+                }
+            }
+        }
+    }
+  learner_created: true
+- name: src/converter/exceptions/ImpossibleToConvertException.kt
+  visible: true
+  text: |
+    package converter.exceptions
+
+    class ImpossibleToConvertException(message: String) : Exception(message)
+  learner_created: true
+- name: src/converter/converters/ConverterImpl.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    import converter.exceptions.ImpossibleToConvertException
+
+    class ConverterImpl : Converter {
+        override fun convert(value: Double, from: ConverterUnit, to: ConverterUnit): Double {
+            if (from == to) {
+                return value
+            }
+
+            if (!from.sameGroupAs(to)) {
+                throw ImpossibleToConvertException("Conversion from ${from.name} to ${to.name} is impossible")
+            }
+
+            return value * from.k / to.k
+        }
+    }
+  learner_created: true
+- name: src/converter/Extensions.kt
+  visible: true
+  text: |
+    package converter
+
+    fun String.toPlural(num: Number): String {
+        val table = mapOf(
+            "meter" to "meters",
+            "foot" to "feet",
+            "inch" to "inches",
+            "yard" to "yards",
+            "cm" to "centimeters",
+            "mm" to "millimeters",
+
+            "gram" to "grams",
+            "g" to "grams"
+        )
+        if (table.values.contains(this)) {
+            return this
+        }
+        return table[this]?.let {
+            if (num != 1.0) {
+                it
+            } else {
+                this
+            }
+        } ?: if (num != 1.0) "${this}s" else this
+    }
+  learner_created: true
+- name: src/converter/converters/ConverterUnit.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    sealed class ConverterUnit(val k: Double, val name: String) {
+        sealed class Distance(k: Double, name: String) : ConverterUnit(k, name) {
+            override fun sameGroupAs(unit: ConverterUnit) = unit is Distance
+
+            object Meter : Distance(1.0, "meter")
+            object Kilometer : Distance(1000.0, "kilometer")
+            object Centimeter : Distance(0.01, "centimeter")
+            object Millimeter : Distance(0.001, "millimeter")
+            object Mile : Distance(1609.35, "mile")
+            object Yard : Distance(0.9144, "yard")
+            object Foot : Distance(0.3048, "foot")
+            object Inch : Distance(0.0254, "inch")
+        }
+
+        sealed class Weight(k: Double, name: String) : ConverterUnit(k, name) {
+            override fun sameGroupAs(unit: ConverterUnit) = unit is Weight
+
+            object Gram : Weight(1.0, "gram")
+            object Kilogram : Weight(1000.0, "kilogram")
+            object Milligram : Weight(0.001, "milligram")
+            object Pound : Weight(453.592, "pound")
+            object Ounce : Weight(28.3495, "ounce")
+        }
+
+        abstract fun sameGroupAs(unit: ConverterUnit): Boolean
+    }
+
+    private val units = mapOf(
+        "(m|meters?)" to ConverterUnit.Distance.Meter,
+        "(km|kilometers?)" to ConverterUnit.Distance.Kilometer,
+        "^(cm|centimeters?)$" to ConverterUnit.Distance.Centimeter,
+        "^(mm|millimeters?)$" to ConverterUnit.Distance.Millimeter,
+        "^(mi|miles?)$" to ConverterUnit.Distance.Mile,
+        "^(yd|yards?)$" to ConverterUnit.Distance.Yard,
+        "^(ft|foot|feet)$" to ConverterUnit.Distance.Foot,
+        "^(in|inch|inches)$" to ConverterUnit.Distance.Inch,
+
+        "(g|grams?)" to ConverterUnit.Weight.Gram,
+        "(kg|kilograms?)" to ConverterUnit.Weight.Kilogram,
+        "(mg|milligrams?)" to ConverterUnit.Weight.Milligram,
+        "(lb|pounds?)" to ConverterUnit.Weight.Pound,
+        "(oz|ounces?)" to ConverterUnit.Weight.Ounce,
+    )
+
+    fun String.toConverterUnit(): ConverterUnit? {
+        return units.mapNotNull { (variants, unit) ->
+            if (this.matches(variants.toRegex())) {
+                unit
+            } else {
+                null
+            }
+        }.firstOrNull()
+    }
+
+    // fun main() {
+    //    val u = "kg".toConverterUnit()
+    //    println(u?.name)
+    //    println("isDistance: ${u is ConverterUnit.Distance}")
+    //    println("isWeight: ${u is ConverterUnit.Weight}")
+    //
+    //    val kg = "kilogram".toConverterUnit()!!
+    //    val m = "g".toConverterUnit()!!
+    //    println(kg.sameGroupAs(m))
+    //
+    //    println("Is equal: ${kg == u}")
+    // }
+  learner_created: true
+- name: src/converter/converters/Converter.kt
+  visible: true
+  text: |
+    package converter.converters
+
+    interface Converter {
+        fun convert(value: Double, from: ConverterUnit, to: ConverterUnit): Double
+    }
+  learner_created: true
 - name: test/Task5Test.kt
   visible: false
   text: |

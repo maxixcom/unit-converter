@@ -23,8 +23,8 @@ class ConsoleRunner : Runnable {
                 val result = queryRegex.matchEntire(query) ?: throw Exception("Wrong input.")
 
                 val value = result.groups["value"]!!.value.toDouble()
-                val from = result.groups["from"]!!.value
-                val to = result.groups["to"]!!.value
+                val from = result.groups["from"]!!.value.lowercase()
+                val to = result.groups["to"]!!.value.lowercase()
 
                 val fromUnit = from.lowercase().toConverterUnit()
                 val toUnit = to.lowercase().toConverterUnit()
@@ -36,9 +36,9 @@ class ConsoleRunner : Runnable {
                     converter.convert(value, fromUnit, toUnit)
                 } catch (e: ImpossibleToConvertException) {
                     println(
-                        "Conversion from ${fromUnit?.let { from } ?: "???"}" +
+                        "Conversion from ${fromUnit?.let { from.toPlural(2) } ?: "???"}" +
                             " to " +
-                            "${toUnit?.let { to } ?: "???"} is impossible"
+                            "${toUnit?.let { to.toPlural(2) } ?: "???"} is impossible"
                     )
                     continue
                 }

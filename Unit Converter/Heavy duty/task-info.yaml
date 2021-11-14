@@ -396,20 +396,8 @@ files:
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/70/stages/388/implement#comment
-status: Failed
+status: Solved
 feedback:
-  message: |-
-    Wrong answer in test #17
-
-    Please find below the output of your program during this failed test.
-    Note that the &#39;&gt;&#39; character indicates the beginning of the input line.
-
-    ---
-
-    Enter what you want to convert (or exit):
-    &gt; 100.0 X to Pound
-    Conversion from ??? to Pound is impossible
-    Enter what you want to convert (or exit):
-    &gt; exit
-  time: Thu, 11 Nov 2021 12:08:14 UTC
-record: -1
+  message: Congratulations!
+  time: Sat, 13 Nov 2021 17:44:19 UTC
+record: 4
