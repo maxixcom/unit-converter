@@ -1,25 +1,23 @@
 package converter
 
-fun String.toPlural(num: Number): String {
+import kotlin.math.abs
+
+fun String.toPlural(num: Double): String {
     val table = mapOf(
-        "meter" to "meters",
         "foot" to "feet",
         "inch" to "inches",
-        "yard" to "yards",
-        "cm" to "centimeters",
-        "mm" to "millimeters",
-
-        "gram" to "grams",
-        "g" to "grams"
+        "degree Celsius" to "degrees Celsius",
+        "degree Fahrenheit" to "degrees Fahrenheit",
     )
     if (table.values.contains(this)) {
         return this
     }
+    val n = abs(num)
     return table[this]?.let {
-        if (num != 1.0) {
+        if (n != 1.0) {
             it
         } else {
             this
         }
-    } ?: if (num != 1.0) "${this}s" else this
+    } ?: if (n != 1.0) "${this}s" else this
 }

@@ -3,6 +3,7 @@ package converter.converters
 sealed class ConverterUnit(val k: Double, val name: String) {
     sealed class Distance(k: Double, name: String) : ConverterUnit(k, name) {
         override fun sameGroupAs(unit: ConverterUnit) = unit is Distance
+        override fun toString(): String = name
 
         object Meter : Distance(1.0, "meter")
         object Kilometer : Distance(1000.0, "kilometer")
@@ -16,12 +17,55 @@ sealed class ConverterUnit(val k: Double, val name: String) {
 
     sealed class Weight(k: Double, name: String) : ConverterUnit(k, name) {
         override fun sameGroupAs(unit: ConverterUnit) = unit is Weight
+        override fun toString(): String = name
 
         object Gram : Weight(1.0, "gram")
         object Kilogram : Weight(1000.0, "kilogram")
         object Milligram : Weight(0.001, "milligram")
         object Pound : Weight(453.592, "pound")
         object Ounce : Weight(28.3495, "ounce")
+    }
+
+    sealed class Temperature(name: String) : ConverterUnit(0.0, name) {
+        override fun sameGroupAs(unit: ConverterUnit) = unit is Temperature
+        override fun toString(): String = name
+
+        abstract fun convertTo(value: Double, unit: Temperature): Double
+
+        object Celsius : Temperature("celsius") {
+            override fun toString(): String = "degree Celsius"
+
+            override fun convertTo(value: Double, unit: Temperature): Double =
+                when (unit) {
+                    Celsius -> value
+                    Fahrenheit -> 32 + value * 9 / 5
+                    Kelvin -> value + ABSOLUTE_ZERO
+                }
+        }
+
+        object Fahrenheit : Temperature("fahrenheit") {
+            override fun toString(): String = "degree Fahrenheit"
+
+            override fun convertTo(value: Double, unit: Temperature): Double =
+                when (unit) {
+                    Celsius -> (value - 32) * 5 / 9
+                    Fahrenheit -> value
+                    Kelvin -> (value + 459.67) * 5 / 9
+                }
+        }
+
+        object Kelvin : Temperature("kelvin") {
+            override fun convertTo(value: Double, unit: Temperature): Double =
+                when (unit) {
+                    Celsius -> value - ABSOLUTE_ZERO
+                    Fahrenheit -> value * 9 / 5 - 459.67
+                    Kelvin -> value
+                }
+        }
+
+        companion object {
+            const val ABSOLUTE_ZERO = 273.15
+        }
     }
 
     abstract fun sameGroupAs(unit: ConverterUnit): Boolean
@@ -42,6 +86,10 @@ private val units = mapOf(
     "(mg|milligrams?)" to ConverterUnit.Weight.Milligram,
     "(lb|pounds?)" to ConverterUnit.Weight.Pound,
     "(oz|ounces?)" to ConverterUnit.Weight.Ounce,
+
+    "(celsius|dc|c?)" to ConverterUnit.Temperature.Celsius,
+    "(fahrenheit|df|f?)" to ConverterUnit.Temperature.Fahrenheit,
+    "(kelvins?|k?)" to ConverterUnit.Temperature.Kelvin,
 )
 
 fun String.toConverterUnit(): ConverterUnit? {

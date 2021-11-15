@@ -279,8 +279,8 @@ files:
                     val result = queryRegex.matchEntire(query) ?: throw Exception("Wrong input.")
 
                     val value = result.groups["value"]!!.value.toDouble()
-                    val from = result.groups["from"]!!.value.lowercase()
-                    val to = result.groups["to"]!!.value.lowercase()
+                    val from = result.groups["from"]!!.value
+                    val to = result.groups["to"]!!.value
 
                     val fromUnit = from.lowercase().toConverterUnit()
                     val toUnit = to.lowercase().toConverterUnit()
@@ -292,9 +292,9 @@ files:
                         converter.convert(value, fromUnit, toUnit)
                     } catch (e: ImpossibleToConvertException) {
                         println(
-                            "Conversion from ${fromUnit?.let { from.toPlural(2) } ?: "???"}" +
+                            "Conversion from ${fromUnit?.let { from } ?: "???"}" +
                                 " to " +
-                                "${toUnit?.let { to.toPlural(2) } ?: "???"} is impossible"
+                                "${toUnit?.let { to } ?: "???"} is impossible"
                         )
                         continue
                     }
@@ -345,19 +345,9 @@ files:
 
     fun String.toPlural(num: Number): String {
         val table = mapOf(
-            "meter" to "meters",
             "foot" to "feet",
             "inch" to "inches",
-            "yard" to "yards",
-            "cm" to "centimeters",
-            "mm" to "millimeters",
-
-            "gram" to "grams",
-            "g" to "grams"
         )
-        if (table.values.contains(this)) {
-            return this
-        }
         return table[this]?.let {
             if (num != 1.0) {
                 it
@@ -559,5 +549,9 @@ files:
     }
   learner_created: false
 feedback_link: https://hyperskill.org/projects/70/stages/389/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Mon, 15 Nov 2021 15:14:43 UTC
 record: -1

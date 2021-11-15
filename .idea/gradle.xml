@@ -11,6 +11,13 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Topics/File hierarchies/Create file hierarchy" />
+            <option value="$PROJECT_DIR$/Topics/File hierarchies/Theory" />
+            <option value="$PROJECT_DIR$/Topics/When expression/Direction" />
+            <option value="$PROJECT_DIR$/Topics/When expression/From string to a number" />
+            <option value="$PROJECT_DIR$/Topics/When expression/Strings as objects" />
+            <option value="$PROJECT_DIR$/Topics/When expression/The number of digits" />
+            <option value="$PROJECT_DIR$/Topics/When expression/Theory" />
             <option value="$PROJECT_DIR$/Unit Converter/task" />
             <option value="$PROJECT_DIR$/util" />
           </set>
